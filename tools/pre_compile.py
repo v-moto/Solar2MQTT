@@ -5,9 +5,4 @@ env.Append(CPPDEFINES=[
     ("HWBOARD", env.StringifyMacro(env["BOARD"])),
 ])
 
-if env.GetProjectOption("custom_hardwareserial") == "true":
-    env.Append(CPPDEFINES=[
-        ("isUART_HARDWARE",  env.StringifyMacro(env.GetBuildType())),
-    ])
-
 env.Replace(PROGNAME="Solar2MQTT_%s_%s" % (str(env["BOARD"]), env.GetProjectOption("custom_prog_version")))

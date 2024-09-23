@@ -3,15 +3,6 @@
 #define ARDUINOJSON_USE_LONG_LONG 1
 #define JSON_BUFFER 2048
 
-
-#ifdef isUART_HARDWARE
-#define INVERTER_TX 1
-#define INVERTER_RX 3
-#else
-#define INVERTER_TX 13
-#define INVERTER_RX 12
-#endif
-
 #define LED_PIN 02 // D4 with the LED on Wemos D1 Mini
 #define LED_COM 5
 #define LED_SRV 0

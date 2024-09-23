@@ -33,13 +33,13 @@ void notificationLED()
       ledState = 4;
     else if (!mqttclient.connected() && strcmp(settings.data.mqttServer, "") != 0)
       ledState = 3;
-    else if (!mppClient.connection)
+    else if (!modbus.connection)
       ledState = 2;
-    else if (WiFi.status() == WL_CONNECTED && mqttclient.connected() && mppClient.connection)
+    else if (WiFi.status() == WL_CONNECTED && mqttclient.connected() && modbus.connection)
       ledState = 1;
 
 
-    digitalWrite(LED_COM, !mppClient.connection); //make it blink blink when communication
+    digitalWrite(LED_COM, !modbus.connection); //make it blink blink when communication
     digitalWrite(LED_SRV, !mqttclient.connected()); //make it blinky when sending data
     digitalWrite(LED_NET, !(WiFi.status() == WL_CONNECTED)  ? true : false);
   }

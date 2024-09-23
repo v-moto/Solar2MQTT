@@ -63,7 +63,7 @@ private:
   {
     if (strlen(data.deviceName) == 0 || strlen(data.deviceName) >= 40)
     {
-      strcpy(data.deviceName, "Solar2MQTT");
+      strcpy(data.deviceName, "Must2MQTT");
     }
     if (strlen(data.mqttServer) == 0 || strlen(data.mqttServer) >= 40)
     {
@@ -123,7 +123,7 @@ private:
     if (data.coVers != configVersion)
     {
       data.coVers = configVersion;
-      strcpy(data.deviceName, "Solar2MQTT");
+      strcpy(data.deviceName, "Must2MQTT");
       strcpy(data.mqttServer, "");
       strcpy(data.mqttUser, "");
       strcpy(data.mqttPassword, "");
