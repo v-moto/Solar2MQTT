@@ -319,6 +319,10 @@ bool MODBUS::parseModbusToJson(modbus_register_info_t &register_info)
         {
             return false;
         }
+
+        if ( millis() - previousTime > cmdDelayTime){
+            return false;
+        }
     }
 
     return true;

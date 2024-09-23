@@ -1,9 +1,8 @@
-# Solar2MQTT [![GitHub release](https://img.shields.io/github/release/softwarecrash/Solar2MQTT?include_prereleases=&sort=semver&color=blue)](https://github.com/softwarecrash/Solar2MQTT/releases/latest) [![Discord](https://img.shields.io/discord/1007020337482973254?logo=discord&label=Discord)](https://discord.gg/fb2nZWDExz)
+# Must2MQTT MQTT to modbus converter for MUST Inverter (forked fom https://github.com/softwarecrash/Solar2MQTT )
 
 # Features:
 - captive portal for wifi and MQTT config
-- config in webinterface
-- Full Controll with [Custom commands](https://github.com/softwarecrash/Solar2MQTT/wiki/Set-parameters)
+- config in webinterface 
 - get essential data over webinterface, get [all data](https://github.com/softwarecrash/Solar2MQTT/wiki/Datapoints-and-units) over MQTT
 - classic MQTT datapoints or Json string over MQTT
 - get Json over web at /livejson?
@@ -12,20 +11,10 @@
 - [blink codes](https://github.com/softwarecrash/Solar2MQTT/wiki/Blink-Codes) for the current state of the ESP
 - [Reset functions](https://github.com/softwarecrash/Solar2MQTT/wiki/Reset)
 - [Support Home Assistant](https://github.com/softwarecrash/Solar2MQTT/wiki/HomeAssistant-integration)
-- with Teapod
-
-
 
 
 **works with**
-- Most devices that use the watchpower PC Software
--  Most devices that use the Solarpower PC Software
-- PIP devices
-- i solar 
-- IGrid
-- Many devices from EASUN
-- and many many others based on the chinese solar inverter with a rj45 jack and usb port, primary identified by the display
-- Take a look at the [device list in the wiki](https://github.com/softwarecrash/Solar2MQTT/wiki/Confirmed-Working-Device-List)
+- MUST PV18 devices
 
 
 **Main screen:**
@@ -41,14 +30,11 @@
 ![image](https://github.com/softwarecrash/Solar2MQTT/assets/17761850/823093bf-8abe-4b7e-913f-7bac9420d108)
 
 
-
-
-
 # How to use:
 - Download the [latest Firmware](https://github.com/softwarecrash/Solar2MQTT/releases/latest)
 - flash the bin file to an ESP8266 (recommended Wemos D1 Mini) with [Tasmotizer](https://github.com/tasmota/tasmotizer/releases)
 - connect the ESP like the [wiring diagram](https://github.com/softwarecrash/Solar2MQTT/wiki/Wiring-Diagram)
-- search for the wifi ap "Solar2MQTT-AP" and connect to it
+- search for the wifi ap "Must2MQTT-AP" and connect to it
 - surf to 192.168.4.1 and set up your wifi and optional MQTT
 - that's it :)
 
@@ -60,30 +46,19 @@
 
 
 
-**POWER:** Using a 3.3V DC Buck Converter that can handle up to 20V or a DC/DC or USB power currently.
+**POWER:** USB power from inverter USB port.
 
 # Parts required to build
 
 Most of the parts can be bought as modules, it's usually cheaper that way.
 
 - ESP8266 - Wemos D1 Mini or ESP8266-01
-- MAX3232 module Like this https://amzn.eu/d/8t3gk5t or https://bit.ly/3BFPqrw or with orginal cable https://www.amazon.de/dp/B09XWPTDYP
-- DC-DC buck module - 12-80v down to 5v
-
-# Completely assembled and tested PCB's
-
-You are welcome to get fully stocked and tested PCB's. These are then already loaded with the lastest firmware. The earnings from the PCBs are used for the further development of existing and new projects.
-
-![Solar-MQTT-PCB](https://user-images.githubusercontent.com/17761850/233859179-cc9c9075-b88a-4f38-b804-bc0f409cf8ce.png)
-
-If interested see [here](https://all-solutions.store)
-
+- MAX485 UART-RS48 module 
+- old RJ45 cable or connector
 #
-Questions?
-[Join the Discord Channel (German / English)](https://discord.gg/pAArqVsVS4)
+[basic functinality was forked from https://github.com/softwarecrash/Solar2MQTT]
 
-#
-[<img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"/>](https://donate.softwarecrash.de)
+command set taken from https://github.com/taHC81/MUST-ESPhome/blob/ae6d43f92bf3b2dc8efb78ba023e0eab26e041f2/PH1800%20PV1800%20EP1800%20PV3500%20EP3500%20RS485%20Modbud%20RTU%20communication%20Protocol%201.4.15.xlsx
 
 [![LICENSE](https://licensebuttons.net/l/by-nc-nd/4.0/88x31.png)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 

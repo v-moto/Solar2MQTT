@@ -61,7 +61,8 @@ public:
 
 private:
     unsigned long previousTime = 0;
-    unsigned long delayTime = 1000;
+    unsigned long delayTime = 200;
+    unsigned long cmdDelayTime = 3000;
     byte requestCounter = 0;
 
     long long int connectionCounter = 0;
