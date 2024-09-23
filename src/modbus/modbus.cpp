@@ -142,11 +142,8 @@ bool MODBUS::getModbusValue(uint16_t register_id, modbus_entity_t modbus_entity,
         }
         if (modbus_entity == MODBUS_TYPE_HOLDING)
         {
-            uint8_t result;
-            result = mb.readHoldingRegisters(register_id, 1);
-            bool modbusResult;
-            modbusResult = getModbusResultMsg(result);
-            if (modbusResult)
+            uint8_t result = mb.readHoldingRegisters(register_id, 1);
+            if (getModbusResultMsg(result))
             {
                 *value_ptr = mb.getResponseBuffer(0);
                 return true;
@@ -282,6 +279,17 @@ bool MODBUS::readModbusRegisterToJson(const modbus_register_t *reg, JsonObject *
             }
             break;
         }
+        case REGISTER_TYPE_ASCII:
+        {
+            String out = "";
+            char high_byte = (raw_value >> 8) & 0xFF;
+            char low_byte = raw_value & 0xFF;
+
+            out += high_byte;
+            out += low_byte;
+            (*variant)[reg->name] = out;
+            break;
+        }
         case REGISTER_TYPE_DEBUG:
 
             writeLog("Raw DEBUG value: %s=%#06x %s", reg->name, raw_value, toBinary(raw_value).c_str());
@@ -320,7 +328,8 @@ bool MODBUS::parseModbusToJson(modbus_register_info_t &register_info)
             return false;
         }
 
-        if ( millis() - previousTime > cmdDelayTime){
+        if (millis() - previousTime > cmdDelayTime)
+        {
             return false;
         }
     }

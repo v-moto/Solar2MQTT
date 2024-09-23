@@ -4,7 +4,7 @@
 
 typedef enum
 {
-    MODBUS_TYPE_HOLDING = 0x00, /*!< Modbus Holding register. */
+    MODBUS_TYPE_HOLDING = 0x00, /*!< Modbus Holding register. */ 
     //    MODBUS_TYPE_INPUT,                  /*!< Modbus Input register. */
     //    MODBUS_TYPE_COIL,                   /*!< Modbus Coils. */
     //    MODBUS_TYPE_DISCRETE,               /*!< Modbus Discrete bits. */
@@ -15,10 +15,10 @@ typedef enum
 typedef enum
 {
     //    REGISTER_TYPE_U8 = 0x00,                   /*!< Unsigned 8 */
-    REGISTER_TYPE_U16 = 0x01, /*!< Unsigned 16 */
-                              //    REGISTER_TYPE_U32 = 0x02,                  /*!< Unsigned 32 */
-                              //    REGISTER_TYPE_FLOAT = 0x03,                /*!< Float type */
-                              //    REGISTER_TYPE_ASCII = 0x04,                 /*!< ASCII type */
+    REGISTER_TYPE_U16 = 0x01,   /*!< Unsigned 16 */
+                                //    REGISTER_TYPE_U32 = 0x02,                  /*!< Unsigned 32 */
+                                //    REGISTER_TYPE_FLOAT = 0x03,                /*!< Float type */
+    REGISTER_TYPE_ASCII = 0x04, /*!< ASCII type */
     REGISTER_TYPE_DIEMATIC_ONE_DECIMAL = 0x05,
     REGISTER_TYPE_DIEMATIC_TWO_DECIMAL = 0x06,
     REGISTER_TYPE_BITFIELD = 0x07,
@@ -41,6 +41,7 @@ typedef struct
 } modbus_register_t;
 
 const modbus_register_t registers_live[] = {
+
     {25201, MODBUS_TYPE_HOLDING, REGISTER_TYPE_CUSTOM_VAL_NAME, "Inverter_Operation_Mode", {.bitfield = {
                                                                                                 "Power On",
                                                                                                 "Self Test",
@@ -67,7 +68,11 @@ const modbus_register_t registers_live[] = {
     {25233, MODBUS_TYPE_HOLDING, REGISTER_TYPE_U16, "Inverter_Bus_Temperature"},
     {25234, MODBUS_TYPE_HOLDING, REGISTER_TYPE_U16, "Transformer_temperature"},
     {15209, MODBUS_TYPE_HOLDING, REGISTER_TYPE_U16, "MPPT1_Charger_Temperature"},
+};
 
+const modbus_register_t registers_static[] = { 
+    {20000, MODBUS_TYPE_HOLDING, REGISTER_TYPE_ASCII, "Device_Model_Hight"},
+    {20001, MODBUS_TYPE_HOLDING, REGISTER_TYPE_U16, "Device_Model_Low"}
 };
 
 #endif // SRC_MODBUS_REGISTERS_H_
