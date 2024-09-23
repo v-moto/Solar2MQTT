@@ -16,11 +16,11 @@ extern JsonObject liveData;
 
 #define INVERTER_MODBUS_ADDR 4
 
-#define MODBUS_RETRIES 1
+#define MODBUS_RETRIES 2
 
 typedef struct
 {
-    ArduinoJson::JsonVariant variant;
+    JsonObject *variant;
     const modbus_register_t *registers;
     uint8_t array_size;
     uint8_t curr_register;
@@ -56,12 +56,12 @@ public:
      */
     void callback(std::function<void()> func);
     std::function<void()> requestCallback;
-    bool readModbusRegisterToJson(const modbus_register_t *reg, ArduinoJson::JsonVariant variant);
+    bool readModbusRegisterToJson(const modbus_register_t *reg, JsonObject *variant);
     bool parseModbusToJson(modbus_register_info_t& register_info );
 
 private:
     unsigned long previousTime = 0;
-    unsigned long delayTime =2000;
+    unsigned long delayTime = 1000;
     byte requestCounter = 0;
 
     long long int connectionCounter = 0;

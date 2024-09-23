@@ -45,7 +45,7 @@ bool MODBUS::Init()
     mb.begin(INVERTER_MODBUS_ADDR, *this->my_serialIntf);
 
     live_info = {
-        .variant = liveData,
+        .variant = &liveData,
         .registers = registers_live,
         .array_size = sizeof(registers_live) / sizeof(modbus_register_t),
         .curr_register = 0};
@@ -67,8 +67,6 @@ bool MODBUS::loop()
         }
         connection = (connectionCounter < 5) ? true : false;
         previousTime = millis();
-
-        writeLog("curr3 %d", live_info.curr_register);
 
         if (live_info.curr_register == live_info.array_size)
         {
@@ -142,29 +140,23 @@ bool MODBUS::getModbusValue(uint16_t register_id, modbus_entity_t modbus_entity,
         {
             writeLog("Trial %d/%d", i + 1, MODBUS_RETRIES);
         }
-        switch (modbus_entity)
+        if (modbus_entity == MODBUS_TYPE_HOLDING)
         {
-        case MODBUS_TYPE_HOLDING:
-
             uint8_t result;
             result = mb.readHoldingRegisters(register_id, 1);
             bool modbusResult;
             modbusResult = getModbusResultMsg(result);
-            writeLog("modbusResult: %d", modbusResult);
             if (modbusResult)
             {
                 *value_ptr = mb.getResponseBuffer(0);
-               // writeLog("Data read: %x", *value_ptr);
-                writeLog("Data read2");
                 return true;
             }
-            break;
-
-        default:
+        }
+        else
+        {
             writeLog("Unsupported Modbus entity type");
             value_ptr = nullptr;
             return false;
-            break;
         }
     }
     // Time-out
@@ -186,68 +178,69 @@ String MODBUS::toBinary(uint16_t input)
 
 bool MODBUS::decodeDiematicDecimal(uint16_t int_input, int8_t decimals, float *value_ptr)
 {
-    writeLog("Decoding %#x with %d decimal(s)\n", int_input, decimals);
-
     if (int_input == 65535)
     {
-        *value_ptr = 0; // Set to 0 instead of nullptr
+        value_ptr = nullptr;
         return false;
     }
-
-    uint16_t masked_input = int_input & 0x7FFF;
-    float output = static_cast<float>(masked_input);
-
-    if (int_input & 0x8000)
-    { // Check if the sign bit is set
-        output = -output;
-    }
-
-    // Calculate the scaling factor (10^decimals) directly
-    float scale = 1.0f;
-    for (int8_t i = 0; i < decimals; ++i)
+    else
     {
-        scale *= 10.0f;
+        uint16_t masked_input = int_input & 0x7FFF;
+        float output = static_cast<float>(masked_input);
+        if (int_input >> 15 == 1)
+        {
+            output = -output;
+        }
+        *value_ptr = output / pow(10, decimals);
+        return true;
     }
-
-    *value_ptr = output / scale;
-
-    writeLog("Decoded value: %f\n", *value_ptr);
-    return true;
 }
 
-bool MODBUS::readModbusRegisterToJson(const modbus_register_t *reg, ArduinoJson::JsonVariant variant)
+bool MODBUS::readModbusRegisterToJson(const modbus_register_t *reg, JsonObject *variant)
 {
     // register found
-    writeLog("Register id=%d type=0x%x name=%s", reg->id, reg->type, reg->name);
-    uint16_t raw_value;
-    bool res = getModbusValue(reg->id, reg->modbus_entity, &raw_value);
-    writeLog("getModbusValue returned: %d", res);
-    if (res)
+    if (reg == nullptr || variant == nullptr)
     {
-        writeLog("Raw value: %s=%#06x", reg->name, raw_value);
+        return false; // Return false if invalid input
+    }
+    writeLog("Register id=%d type=0x%x name=%s", reg->id, reg->type, reg->name);
+    uint16_t raw_value = 0;
+
+    float final_value;
+    if (getModbusValue(reg->id, reg->modbus_entity, &raw_value))
+    {
+        // writeLog("Raw value: %s=%#06x", reg->name, raw_value);
 
         switch (reg->type)
         {
         case REGISTER_TYPE_U16:
-
-            writeLog("Value: %u", raw_value);
-            variant[reg->name] = raw_value;
+            // writeLog("Value: %u", raw_value);
+            (*variant)[reg->name] = raw_value;
             break;
 
         case REGISTER_TYPE_DIEMATIC_ONE_DECIMAL:
-
-            float final_value;
             if (decodeDiematicDecimal(raw_value, 1, &final_value))
             {
-                writeLog("Value: %.1f", final_value);
-                variant[reg->name] = final_value;
+                // writeLog("Value: %.1f", final_value);
+                (*variant)[reg->name] = final_value;
             }
             else
             {
-                writeLog("Value: Invalid Diematic value");
+                writeLog("Invalid Diematic value");
             }
             break;
 
+        case REGISTER_TYPE_DIEMATIC_TWO_DECIMAL:
+            if (decodeDiematicDecimal(raw_value, 2, &final_value))
+            {
+                // writeLog("Value: %.1f", final_value);
+                (*variant)[reg->name] = final_value;
+            }
+            else
+            {
+                writeLog("Invalid Diematic value");
+            }
+            break;
         case REGISTER_TYPE_BITFIELD:
 
             for (uint8_t j = 0; j < 16; ++j)
@@ -255,18 +248,17 @@ bool MODBUS::readModbusRegisterToJson(const modbus_register_t *reg, ArduinoJson:
                 const char *bit_varname = reg->optional_param.bitfield[j];
                 if (bit_varname == nullptr)
                 {
-                    writeLog(" [bit%02d] end of bitfield reached", j);
+                    writeLog("[bit%02d] end of bitfield reached", j);
                     break;
                 }
                 const uint8_t bit_value = raw_value >> j & 1;
                 writeLog(" [bit%02d] %s=%d", j, bit_varname, bit_value);
-                variant[bit_varname] = bit_value;
+                (*variant)[bit_varname] = bit_value;
             }
             break;
 
         case REGISTER_TYPE_CUSTOM_VAL_NAME:
         {
-            writeLog("REGISTER_TYPE_CUSTOM_VAL_NAME raw_value=%d", raw_value);
             bool isfound = false;
             for (uint8_t j = 0; j < 16; ++j)
             {
@@ -276,11 +268,10 @@ bool MODBUS::readModbusRegisterToJson(const modbus_register_t *reg, ArduinoJson:
                     writeLog("bitfield[%d] is null", j);
                     break;
                 }
-                writeLog("Checking bitfield[%d] = %s against raw_value = %d", j, bit_varname, raw_value);
                 if (j == raw_value)
                 {
-                    writeLog("Match found! Value: %s", bit_varname);
-                    variant[reg->name] = bit_varname;
+                    // writeLog("Match found, value: %s", bit_varname);
+                    (*variant)[reg->name] = bit_varname;
                     isfound = true;
                     break;
                 }
@@ -319,14 +310,11 @@ bool MODBUS::parseModbusToJson(modbus_register_info_t &register_info)
     {
         register_info.curr_register = 0;
     }
-    writeLog("Registers size %d, curr %d", register_info.array_size, register_info.curr_register);
-    for (uint8_t i = register_info.curr_register; i < register_info.array_size; i++)
+    // writeLog("Registers size %d, curr %d", register_info.array_size, register_info.curr_register);
+    for (; register_info.curr_register <= register_info.array_size - 1; register_info.curr_register++)
     {
-        bool ret_val = readModbusRegisterToJson(&register_info.registers[i], register_info.variant);
+        bool ret_val = readModbusRegisterToJson(&register_info.registers[register_info.curr_register], register_info.variant);
 
-        register_info.curr_register++;
-
-        writeLog("curr2 %d", register_info.curr_register);
         if (!ret_val)
         {
             return false;

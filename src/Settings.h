@@ -131,12 +131,12 @@ private:
       strcpy(data.mqttTriggerPath, "");
       data.deviceQuantity = 1;
       data.mqttPort = 0;
-      data.mqttRefresh = 300;
+      data.mqttRefresh = 10;
       data.mqttJson = false;
       data.webUIdarkmode = false;
       strcpy(data.httpUser, "");
       strcpy(data.httpPass, "");
-      data.haDiscovery = false;
+      data.haDiscovery = true;
       save();
       load();
     }

@@ -27,6 +27,7 @@ DNSServer dns;
 Settings settings;
 
 #include "status-LED.h"
+#include <CircularBuffer.hpp>
 
 // new importetd
 char mqttClientId[80];
@@ -34,6 +35,7 @@ ADC_MODE(ADC_VCC);
 
 // flag for saving data
 unsigned long mqtttimer = 0;
+unsigned long serialOutTimer = 0;
 unsigned long RestartTimer = 0;
 unsigned long slowDownTimer = 0;
 bool shouldSaveConfig = false;
@@ -53,6 +55,8 @@ DynamicJsonDocument Json(JSON_BUFFER);                         // main Json
 JsonObject deviceJson = Json.createNestedObject("EspData");    // basic device data
 JsonObject staticData = Json.createNestedObject("DeviceData"); // battery package data
 JsonObject liveData = Json.createNestedObject("LiveData");     // battery package data
+
+CircularBuffer<String, 20> queue;
 
 //----------------------------------------------------------------------
 void saveConfigCallback()
@@ -235,7 +239,7 @@ void setup()
   // wm.setConfigPortalTimeout(120); // auto close configportal after n seconds
   wm.setSaveConfigCallback(saveConfigCallback);
   // save settings if wifi setup is fire up
-  bool apRunning = wm.autoConnect("Solar2MQTT-AP");
+  bool apRunning = wm.autoConnect("Must2MQTT-AP");
   if (shouldSaveConfig)
   {
     strncpy(settings.data.mqttServer, custom_mqtt_server.getValue(), 40);
@@ -407,7 +411,7 @@ void setup()
     server.begin();
 
     modbus.callback(prozessData);
-    modbus.Init(); // init the PI_serial Library
+    modbus.Init(); 
 
     mqtttimer = (settings.data.mqttRefresh * 1000) * (-1);
   }
@@ -454,6 +458,7 @@ void loop()
     ESP.restart();
   }
   notificationLED(); // notification LED routine
+  handleSerialCommands();
 }
 
 bool prozessData()
@@ -517,8 +522,7 @@ bool connectMQTT()
       {
         mqttclient.publish(topicBuilder(buff, "Alive"), "true", true); // LWT online message must be retained!
         mqttclient.publish(topicBuilder(buff, "IP"), (const char *)(WiFi.localIP().toString()).c_str(), true);
-        mqttclient.subscribe(topicBuilder(buff, "DeviceControl/Set_Command"));
-        mqttclient.subscribe(topicBuilder(buff, "DeviceControl/Set_Command"));
+        mqttclient.subscribe(topicBuilder(buff, "DeviceControl/Set_Command")); 
         mqttclient.subscribe(topicBuilder(buff, "homeassistant/status"));
         if (strlen(settings.data.mqttTriggerPath) >= 1)
         {
@@ -547,21 +551,21 @@ bool sendtoMQTT()
   }
   if (!settings.data.mqttJson)
   {
-    //     char msgBuffer1[200];
-    //     for (JsonPair jsonDev : Json.as<JsonObject>())
-    //     {
-    //       for (JsonPair jsondat : jsonDev.value().as<JsonObject>())
-    //       {
-    //         sprintf(msgBuffer1, "%s/%s/%s", settings.data.mqttTopic, jsonDev.key().c_str(), jsondat.key().c_str());
-    //         mqttclient.publish(msgBuffer1, jsondat.value().as<String>().c_str());
-    //       }
-    //     }
-    //     if (mppClient.get.raw.commandAnswer.length() > 0)
-    //     {
-    //       mqttclient.publish((String(settings.data.mqttTopic) + String("/DeviceControl/Set_Command_answer")).c_str(), (mppClient.get.raw.commandAnswer).c_str());
-    //       writeLog("raw command answer: ",mppClient.get.raw.commandAnswer);
-    //       mppClient.get.raw.commandAnswer = "";
-    //     }
+         char msgBuffer1[200];
+         for (JsonPair jsonDev : Json.as<JsonObject>())
+         {
+           for (JsonPair jsondat : jsonDev.value().as<JsonObject>())
+         {
+           sprintf(msgBuffer1, "%s/%s/%s", settings.data.mqttTopic, jsonDev.key().c_str(), jsondat.key().c_str());
+             mqttclient.publish(msgBuffer1, jsondat.value().as<String>().c_str());
+           }
+       }
+        //  if (mppClient.get.raw.commandAnswer.length() > 0)
+        //  {
+        //    mqttclient.publish((String(settings.data.mqttTopic) + String("/DeviceControl/Set_Command_answer")).c_str(), (mppClient.get.raw.commandAnswer).c_str());
+        //    writeLog("raw command answer: ",mppClient.get.raw.commandAnswer);
+        //    mppClient.get.raw.commandAnswer = "";
+        //  }
     // // RAW
     //     mqttclient.publish(topicBuilder(buff, "RAW/Q1"), (mppClient.get.raw.q1).c_str());
     //     mqttclient.publish(topicBuilder(buff, "RAW/QPIGS"), (mppClient.get.raw.qpigs).c_str());
@@ -714,6 +718,24 @@ void writeLog(const char *format, ...)
   va_end(args);
 
   // write msg to the log
-  DBG_PRINTLN(msg);
-  DBG_WEBLN(msg);
+  //DBG_PRINTLN(msg);
+  queue.push(String(msg));
+}
+
+void handleSerialCommands()
+{
+  if (millis() - serialOutTimer > 200)
+  {
+    uint8_t count = 0;
+    while (!queue.isEmpty())
+    {
+      DBG_WEBLN(queue.shift());
+      count++;
+      if (count > 4)
+      {
+        break;
+      }
+    }
+    serialOutTimer = millis();
+  }
 }

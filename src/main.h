@@ -77,6 +77,8 @@ bool sendHaDiscovery();
  */
 void writeLog(const char* format, ...);
 
+void handleSerialCommands();
+
 static const char *const haStaticDescriptor[][4]{
     // state_topic, icon, unit_ofmeasurement, class
     {"AC_in_rating_current", "current-ac", "A", "current"},

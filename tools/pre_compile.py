@@ -5,4 +5,4 @@ env.Append(CPPDEFINES=[
     ("HWBOARD", env.StringifyMacro(env["BOARD"])),
 ])
 
-env.Replace(PROGNAME="Solar2MQTT_%s_%s" % (str(env["BOARD"]), env.GetProjectOption("custom_prog_version")))
+env.Replace(PROGNAME="Must2MQTT_%s_%s" % (str(env["BOARD"]), env.GetProjectOption("custom_prog_version")))
