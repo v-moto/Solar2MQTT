@@ -405,7 +405,7 @@ bool MODBUS_COM::writeRegister(uint16_t registerAddress, uint16_t value) {
 
     // Check the result
     if (result == _mb.ku8MBSuccess) {
-        writeLog("Modbus write successful: Register %d, Value %.2f", registerAddress, value);
+        writeLog("Modbus write successful: Register %d, Value %d", registerAddress, value);
         return true;
     } else {
         getModbusResultMsg(result);
